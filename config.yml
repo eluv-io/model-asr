@@ -1,0 +1,2 @@
+asr_model: models/stt/asr.nemo
+lm_model: models/stt/kenlm_model
