@@ -2,7 +2,8 @@ FROM continuumio/miniconda3:latest
 
 WORKDIR /elv
 
-RUN apt-get update && apt-get install -y build-essential
+RUN apt-get update && apt-get install -y build-essential && \
+    apt-get install -y ffmpeg
 
 RUN \
    conda create -n asr python=3.7.16 -y
@@ -20,6 +21,6 @@ RUN /opt/conda/envs/asr/bin/pip install dependencies/ctcdecode/.
 RUN /opt/conda/envs/asr/bin/pip install common-ml/. 
 RUN /opt/conda/envs/asr/bin/python -m spacy download en_core_web_sm
 
-EXPOSE 5000
+EXPOSE 5001
 
-ENTRYPOINT ["/opt/conda/envs/asr/bin/python", "server.py", "--port", "5000"]
+ENTRYPOINT ["/opt/conda/envs/asr/bin/python", "server.py", "--port", "5001"]

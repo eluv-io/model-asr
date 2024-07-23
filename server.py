@@ -5,6 +5,7 @@ from dacite import from_dict
 import argparse
 from typing import List
 from common_ml.tags import VideoTag
+from flask_cors import CORS
 
 from asr.model import EnglishSTT
 from config import config
@@ -71,4 +72,5 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int, default=5001)
     parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
-    app.run(port=args.port, debug=args.debug)
+    CORS(app)
+    app.run(host='0.0.0.0', port=args.port)
