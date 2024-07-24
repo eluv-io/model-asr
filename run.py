@@ -1,37 +1,21 @@
-from flask import Flask, jsonify, request
-from marshmallow import Schema, fields
-from dataclasses import dataclass, asdict
-from dacite import from_dict
+
+from dataclasses import asdict
 import argparse
 from typing import List
 from common_ml.tags import VideoTag
-from flask_cors import CORS
+import json
+import logging
 
 from asr.model import EnglishSTT
 from config import config
 
-app = Flask(__name__)
-
-@dataclass
-class Args:
-    word_level: bool
-
-    class Schema(Schema):
-        word_level = fields.Bool(missing=False)
-
-@app.route('/info', methods=['GET'])
-def info():
-    return {"name": "Speech Recognition", "type": "audio"}
-
-@app.route('/run', methods=['POST'])
 def run():
-    args = from_dict(data_class=Args, data=Args.Schema().load(request.args.to_dict()))
-    files = request.files.getlist('files')
-    print(files)
+    files = args.audio_paths
     model = EnglishSTT(config["asr_model"], config["lm_model"])
     all_tags = []
     for file in files:
-        audio = file.read()
+        with open(file, 'rb') as file:
+            audio = file.read()
         tags = model.tag(audio)
         tags = prettify_tags(model, tags)
         if args.word_level:
@@ -40,8 +24,7 @@ def run():
             # combine into one tag
             all_tags.append([VideoTag(start_time=tags[0].start_time, end_time=tags[-1].end_time, text=' '.join(tag.text for tag in tags))])
 
-    print(asdict(all_tags[0][0]))
-    return jsonify({"result": [[asdict(tag) for tag in part_tags] for part_tags in all_tags]})
+    return {"result": [[asdict(tag) for tag in part_tags] for part_tags in all_tags]}
 
 def prettify_tags(stt: EnglishSTT, asr_tags: List[VideoTag]) -> List[VideoTag]:
     if len(asr_tags) == 0:
@@ -69,8 +52,8 @@ def prettify_tags(stt: EnglishSTT, asr_tags: List[VideoTag]) -> List[VideoTag]:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--port', type=int, default=5001)
-    parser.add_argument('--debug', action='store_true')
+    parser.add_argument('audio_paths', nargs='+', type=str)
+    parser.add_argument('--word_level', action='store_true')
     args = parser.parse_args()
-    CORS(app)
-    app.run(host='0.0.0.0', port=args.port)
+    logging.getLogger('nemo_logger').setLevel(logging.CRITICAL)
+    print(json.dumps(run()))

@@ -13,8 +13,5 @@
 #### Build image
 `podman build --format docker -t asr . --network host`
 
-#### Start container
-`podman run -d --rm --name asr_server --network host --device nvidia.com/gpu=0 asr`
-
-#### Call API
-`curl -X POST http://127.0.0.1:5001/run -F 'files=@test/1.mp4' -F 'files=@test/2.mp4'`
+#### Run container
+`podman run --rm --network host --device nvidia.com/gpu=0 asr test/1.mp4 test/2.mp4`

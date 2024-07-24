@@ -10,8 +10,6 @@ setup(
         'torchvision==0.10.0',
         'torchaudio==0.9.0',
         'scikit-image==0.17.2',
-        'flask',
-        'flask_cors',
         'easydict==1.9',
         'Pillow==9.4.0',
         'scikit-learn==1.0.2',
@@ -32,7 +30,6 @@ setup(
         'word2number',
         'deepmultilingualpunctuation==1.0.1',
         'spacy==3.7.2',
-        'dacite==1.8.1',
-        'waitress==2.1.2'
+        'dacite==1.8.1'
     ]
 )
