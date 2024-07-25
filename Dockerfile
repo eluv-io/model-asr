@@ -18,7 +18,6 @@ COPY . .
 
 RUN /opt/conda/envs/asr/bin/pip install .
 RUN /opt/conda/envs/asr/bin/pip install dependencies/ctcdecode/.
-RUN /opt/conda/envs/asr/bin/pip install common-ml/. 
 RUN /opt/conda/envs/asr/bin/python -m spacy download en_core_web_sm
 
 ENTRYPOINT ["/opt/conda/envs/asr/bin/python", "run.py"]

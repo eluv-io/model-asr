@@ -1,2 +1,9 @@
 asr_model: models/stt/asr.nemo
 lm_model: models/stt/kenlm_model
+postprocessing:
+  # if words are this far apart, they are not considered for being in the same sentence. (in milliseconds)
+  sentence_gap: 5000
+
+runtime:
+  default:
+    word_level: False

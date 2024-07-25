@@ -2,34 +2,49 @@
 from dataclasses import asdict
 import argparse
 from typing import List
-from common_ml.tags import VideoTag
+import os
 import json
-import logging
+from loguru import logger
+from marshmallow import Schema, fields, ValidationError
+from common_ml.tags import VideoTag
 
 from asr.model import EnglishSTT
 from config import config
 
+class RuntimeConfig(Schema):
+    word_level = fields.Bool(missing=False)
+
 def run():
     files = args.audio_paths
+    if args.config is None:
+        cfg = config["runtime"]["default"]
+    else:
+        with open(args.config, 'r') as fin:
+            cfg = json.load(fin)
+    try:
+        runtime_config = RuntimeConfig().load(cfg)
+    except ValidationError as e:
+        logger.error("Received invalid runtime config.")
+        raise e
+    tags_out = os.getenv('TAGS_PATH', os.path.join(os.getcwd(), 'tags'))
+    if not os.path.exists(tags_out):
+        os.makedirs(tags_out)
     model = EnglishSTT(config["asr_model"], config["lm_model"])
-    all_tags = []
-    for file in files:
-        with open(file, 'rb') as file:
-            audio = file.read()
+    for fname in files:
+        with open(fname, 'rb') as fin:
+            audio = fin.read()
         tags = model.tag(audio)
         tags = prettify_tags(model, tags)
-        if args.word_level:
-            all_tags.append(tags)
-        else:
+        if not runtime_config['word_level']:
             # combine into one tag
-            all_tags.append([VideoTag(start_time=tags[0].start_time, end_time=tags[-1].end_time, text=' '.join(tag.text for tag in tags))])
-
-    return {"result": [[asdict(tag) for tag in part_tags] for part_tags in all_tags]}
+            tags = [VideoTag(start_time=tags[0].start_time, end_time=tags[-1].end_time, text=' '.join(tag.text for tag in tags))]
+        with open(os.path.join(tags_out, f"{os.path.basename(fname).split('.')[0]}_tags.json"), 'w') as fout:
+            fout.write(json.dumps([asdict(tag) for tag in tags]))
 
 def prettify_tags(stt: EnglishSTT, asr_tags: List[VideoTag]) -> List[VideoTag]:
     if len(asr_tags) == 0:
         return asr_tags
-    max_gap = 5000
+    max_gap = config["postprocessing"]["sentence_gap"]
     full_transcript = [asr_tags[0].text]
     last_start = asr_tags[0].start_time
     for tag in asr_tags[1:]:
@@ -53,7 +68,6 @@ def prettify_tags(stt: EnglishSTT, asr_tags: List[VideoTag]) -> List[VideoTag]:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('audio_paths', nargs='+', type=str)
-    parser.add_argument('--word_level', action='store_true')
+    parser.add_argument('--config', type=str, required=False)
     args = parser.parse_args()
-    logging.getLogger('nemo_logger').setLevel(logging.CRITICAL)
-    print(json.dumps(run()))
+    run()
