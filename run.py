@@ -14,19 +14,19 @@ from config import config
 class RuntimeConfig(Schema):
     word_level = fields.Bool(missing=False)
 
-def run():
-    files = args.audio_paths
-    if args.config is None:
+def run(audio_paths: List[str], runtime_config: str=None):
+    files = audio_paths
+    if runtime_config is None:
         cfg = config["runtime"]["default"]
     else:
-        with open(args.config, 'r') as fin:
+        with open(runtime_config, 'r') as fin:
             cfg = json.load(fin)
     try:
         runtime_config = RuntimeConfig().load(cfg)
     except ValidationError as e:
         logger.error("Received invalid runtime config.")
         raise e
-    tags_out = os.getenv('TAGS_PATH', os.path.join(os.getcwd(), 'tags'))
+    tags_out = os.getenv('TAGS_PATH', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tags'))
     if not os.path.exists(tags_out):
         os.makedirs(tags_out)
     model = EnglishSTT(config["asr_model"], config["lm_model"])
@@ -70,4 +70,4 @@ if __name__ == '__main__':
     parser.add_argument('audio_paths', nargs='+', type=str)
     parser.add_argument('--config', type=str, required=False)
     args = parser.parse_args()
-    run()
+    run(args.audio_paths, args.config)

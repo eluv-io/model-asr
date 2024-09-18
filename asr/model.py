@@ -12,13 +12,14 @@ from ctcdecode import CTCBeamDecoder
 from deepmultilingualpunctuation import PunctuationModel
 
 from common_ml.tags import VideoTag
+from common_ml.model import VideoModel
 from .utils import postprocess
 
 TOKEN_OFFSET = 100
 FRAME_SIZE = .04
 SAMPLE_RATE = 16000
 
-class EnglishSTT():
+class EnglishSTT(VideoModel):
     def __init__(self, asr_path: str, lm_path: str):
         self.device = 'cuda'
         load_path = asr_path
