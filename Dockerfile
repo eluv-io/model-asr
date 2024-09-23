@@ -2,8 +2,7 @@ FROM continuumio/miniconda3:latest
 
 WORKDIR /elv
 
-RUN apt-get update && apt-get install -y build-essential && \
-    apt-get install -y ffmpeg
+RUN apt-get update && apt-get install -y build-essential
 
 RUN \
    conda create -n asr python=3.7.16 -y
@@ -11,8 +10,7 @@ RUN \
 SHELL ["conda", "run", "-n", "asr", "/bin/bash", "-c"]
 
 RUN \
-    conda install -y cudatoolkit=10.1 cudnn=7 nccl && \
-    conda install -y -c conda-forge ffmpeg-python
+    conda install -y cudatoolkit=10.1 cudnn=7 nccl 
 
 COPY . .
 
