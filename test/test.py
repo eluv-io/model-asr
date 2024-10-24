@@ -12,7 +12,7 @@ def test_stt() -> List[Callable]:
         os.environ['TAGS_PATH'] = os.path.join(filedir, 'tags')
         run([os.path.join(filedir, '1.mp4'), os.path.join(filedir, '2.mp4')])
         tags = []
-        for tag_file in os.listdir(os.environ['TAGS_PATH']):
+        for tag_file in sorted(os.listdir(os.environ['TAGS_PATH'])):
             with open(os.path.join(os.environ['TAGS_PATH'], tag_file), 'r') as fin:
                 tags.append(json.load(fin))
         return tags
