@@ -16,7 +16,7 @@
 `podman build --format docker -t asr . --network host`
 
 #### Default run
-`podman run --rm --volume=$(pwd)/test:/elv/test:ro --volume=$(pwd)/models:/elv/models:ro --volume=$(pwd)/tags:/elv/tags --volume=$(pwd)/.cache:/root/.cache --network host --device nvidia.com/gpu=0 caption test/1.mp4 test/2.mp4`
+`podman run --rm --volume=$(pwd)/test:/elv/test:ro --volume=$(pwd)/models:/elv/models:ro --volume=$(pwd)/tags:/elv/tags --volume=$(pwd)/.cache:/root/.cache --network host --device nvidia.com/gpu=0 asr test/1.mp4 test/2.mp4`
 
 1. Note: you must mount the files to tag into the container storage (`--volume=$(pwd)/test:/elv/test`)
 2. Tag files will appear in the `tags` directory (`--volume=$(pwd)/tags:/elv/tags`). 

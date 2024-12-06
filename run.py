@@ -1,5 +1,4 @@
 
-from dataclasses import asdict
 import argparse
 from typing import List
 import os
@@ -7,22 +6,36 @@ import json
 from loguru import logger
 from marshmallow import Schema, fields, ValidationError
 from common_ml.tags import VideoTag
+from dataclasses import asdict, dataclass
+from common_ml.types import Data
+from common_ml.utils import nested_update
 
 from asr.model import EnglishSTT
 from config import config
 
-class RuntimeConfig(Schema):
-    word_level = fields.Bool(missing=False)
+@dataclass
+class RuntimeConfig(Data):
+    word_level: bool
+    class Schema(Schema):
+        word_level = fields.Bool(required=True)
 
-def run(audio_paths: List[str], runtime_config: str=None):
+    @staticmethod
+    def from_dict(data: dict) -> 'RuntimeConfig':
+        return RuntimeConfig(**data)
+
+def run(audio_paths: List[str], runtime_config: str=None) -> None:
     files = audio_paths
     if runtime_config is None:
         cfg = config["runtime"]["default"]
     else:
-        with open(runtime_config, 'r') as fin:
-            cfg = json.load(fin)
+        if runtime_config.endswith('.json'):
+            with open(runtime_config, 'r') as fin:
+                cfg = json.load(fin)
+        else:
+            cfg = json.loads(runtime_config)
+        cfg = nested_update(config["runtime"]["default"], cfg)
     try:
-        runtime_config = RuntimeConfig().load(cfg)
+        runtime_config = RuntimeConfig.from_dict(cfg)
     except ValidationError as e:
         logger.error("Received invalid runtime config.")
         raise e
@@ -35,7 +48,7 @@ def run(audio_paths: List[str], runtime_config: str=None):
             audio = fin.read()
         tags = model.tag(audio)
         tags = prettify_tags(model, tags)
-        if not runtime_config['word_level']:
+        if len(tags) > 0 and not runtime_config.word_level:
             # combine into one tag
             tags = [VideoTag(start_time=tags[0].start_time, end_time=tags[-1].end_time, text=' '.join(tag.text for tag in tags))]
         with open(os.path.join(tags_out, f"{os.path.basename(fname).split('.')[0]}_tags.json"), 'w') as fout:

@@ -25,6 +25,7 @@ class EnglishSTT(VideoModel):
         load_path = asr_path
         self.model = nemo_asr.models.EncDecCTCModelBPE.restore_from(
             load_path, map_location=self.device).eval()
+        logger.info(f"Loaded model from {load_path}")
         self.ids_to_text_func = self.model.tokenizer.ids_to_text
         self.ids_to_tokens_func = self.model.tokenizer.ids_to_tokens
         vocab = self.model.decoder.vocabulary + ["_"]
