@@ -1,4 +1,5 @@
 from setuptools import setup
+import os
 
 setup(
     name="asr",
@@ -32,7 +33,7 @@ setup(
         'spacy==3.7.2',
         'loguru',
         'dacite==1.8.1',
-        'quick_test_py @ git+https://github.com/elv-nickB/quick_test_py.git#egg=quick_test_py',
-        'common_ml @ git+https://github.com/elv-nickB/common-ml.git#egg=common_ml'
+        'common_ml @ git+ssh://git@github.com/qluvio/common-ml.git#egg=common_ml',
+        'quick_test_py @ git+https://github.com/elv-nickB/quick_test_py.git#egg=quick_test_py'
     ]
 )
