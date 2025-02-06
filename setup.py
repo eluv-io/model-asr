@@ -24,7 +24,7 @@ setup(
         'deepmultilingualpunctuation==1.0.1',
         'spacy==3.7.2',
         'loguru',
-        'common_ml @ git+ssh://git@github.com/qluvio/common-ml.git#egg=common_ml',
+        'common_ml @ git+ssh://git@github.com/qluvio/common-ml.git@3d3bf2ce2fa8b6eb84e830650569f53a979becc8#egg=common_ml',
         'quick_test_py @ git+https://github.com/elv-nickB/quick_test_py.git#egg=quick_test_py'
     ]
 )
