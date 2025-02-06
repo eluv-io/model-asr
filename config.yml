@@ -4,6 +4,8 @@ postprocessing:
   # if words are this far apart, they are not considered for being in the same sentence. (in milliseconds)
   sentence_gap: 5000
 
+storage:
+  model_path: /ml/models/stt
 runtime:
   default:
     word_level: False

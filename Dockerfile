@@ -22,17 +22,17 @@ RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
 # Add GitHub to known_hosts to bypass host verification
 RUN ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
 
+RUN \
+    conda install -y rust
+
+# Verify installation
+RUN cargo --version
+
 COPY setup.py .
 RUN mkdir -p asr
 
 ARG SSH_AUTH_SOCK
 ENV SSH_AUTH_SOCK ${SSH_AUTH_SOCK}
-
-# Set Rust path permanently
-ENV PATH="/root/.cargo/bin:${PATH}"
-
-# Verify installation
-RUN cargo --version
 
 RUN /opt/conda/envs/asr/bin/pip install .
 
@@ -42,7 +42,7 @@ RUN /opt/conda/envs/asr/bin/python -m spacy download en_core_web_sm
 
 COPY models ./models
 
-COPY asr ./asr
 COPY config.yml run.py config.py .
+COPY asr ./asr
 
 ENTRYPOINT ["/opt/conda/envs/asr/bin/python", "run.py"]
