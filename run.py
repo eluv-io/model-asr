@@ -24,15 +24,10 @@ class RuntimeConfig(Data):
         return RuntimeConfig(**data)
 
 def run(audio_paths: List[str], runtime_config: str=None) -> None:
-    files = audio_paths
     if runtime_config is None:
         cfg = config["runtime"]["default"]
     else:
-        if runtime_config.endswith('.json'):
-            with open(runtime_config, 'r') as fin:
-                cfg = json.load(fin)
-        else:
-            cfg = json.loads(runtime_config)
+        cfg = json.loads(runtime_config)
         cfg = nested_update(config["runtime"]["default"], cfg)
     try:
         runtime_config = RuntimeConfig.from_dict(cfg)
@@ -43,14 +38,24 @@ def run(audio_paths: List[str], runtime_config: str=None) -> None:
     if not os.path.exists(tags_out):
         os.makedirs(tags_out)
     model = EnglishSTT(config["asr_model"], config["lm_model"])
-    for fname in files:
+
+    word_tags = []
+    word_tags_by_file = []
+    for fname in audio_paths:
         with open(fname, 'rb') as fin:
             audio = fin.read()
         tags = model.tag(audio)
-        tags = prettify_tags(model, tags)
-        if len(tags) > 0 and not runtime_config.word_level:
-            # combine into one tag
-            tags = [VideoTag(start_time=tags[0].start_time, end_time=tags[-1].end_time, text=' '.join(tag.text for tag in tags))]
+        word_tags.extend(tags)
+        word_tags_by_file.append(tags)
+
+    transcript = prettify_tags(model, word_tags)
+    transcript = transcript.split(' ')
+
+    idx = 0
+    for fname, tags in zip(audio_paths, word_tags_by_file):
+        for tag in tags:
+            tag.text = transcript[idx]
+            idx += 1
         with open(os.path.join(tags_out, f"{os.path.basename(fname).split('.')[0]}_tags.json"), 'w') as fout:
             fout.write(json.dumps([asdict(tag) for tag in tags]))
 
@@ -68,15 +73,7 @@ def prettify_tags(stt: EnglishSTT, asr_tags: List[VideoTag]) -> List[VideoTag]:
         last_start = tag.start_time
     corrected_transcript = [stt.correct_text(t) for t in full_transcript]
     corrected_transcript = ' '.join(corrected_transcript)
-    sentence_delimiters = ['.', '?', '!']
-    last_tag = None
-    for tag, corrected in zip(asr_tags, corrected_transcript.split(' ')):
-        if last_tag and last_tag.start_time == tag.start_time and last_tag.text[-1] in sentence_delimiters:
-            tag.start_time += 1
-            tag.end_time += 1
-        tag.text = corrected
-        last_tag = tag
-    return asr_tags
+    return corrected_transcript
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
