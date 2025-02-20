@@ -56,7 +56,7 @@ def run(audio_paths: List[str], runtime_config: str=None) -> None:
         for tag in tags:
             tag.text = transcript[idx]
             idx += 1
-        with open(os.path.join(tags_out, f"{os.path.basename(fname).split('.')[0]}_tags.json"), 'w') as fout:
+        with open(os.path.join(tags_out, f"{os.path.basename(fname)}_tags.json"), 'w') as fout:
             fout.write(json.dumps([asdict(tag) for tag in tags]))
 
 def prettify_tags(stt: EnglishSTT, asr_tags: List[VideoTag]) -> List[VideoTag]:

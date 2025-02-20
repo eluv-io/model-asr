@@ -7,4 +7,4 @@ if ! ssh-add -l ; then
     exit 1
 fi
 
-podman build --format docker -t asr . --network host --build-arg SSH_AUTH_SOCK=$SSH_AUTH_SOCK --volume "${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK}"
+podman build --format docker -t asr . --network host --build-arg SSH_AUTH_SOCK=/tmp/ssh-auth-sock --volume "${SSH_AUTH_SOCK}:/tmp/ssh-auth-sock"
