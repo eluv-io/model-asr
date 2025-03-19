@@ -3,7 +3,7 @@ WORKDIR /elv
 
 RUN apt-get update && apt-get install -y build-essential && apt-get install -y ffmpeg
 
-RUN conda create -n asr python=3.7.16 -y
+RUN conda create -n tagenv python=3.7.16 -y
 
 SHELL ["conda", "run", "-n", "tagenv", "/bin/bash", "-c"]
 
