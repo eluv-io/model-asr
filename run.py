@@ -59,9 +59,9 @@ def run(audio_paths: List[str], runtime_config: str=None) -> None:
         with open(os.path.join(tags_out, f"{os.path.basename(fname)}_tags.json"), 'w') as fout:
             fout.write(json.dumps([asdict(tag) for tag in tags]))
 
-def prettify_tags(stt: EnglishSTT, asr_tags: List[VideoTag]) -> List[VideoTag]:
+def prettify_tags(stt: EnglishSTT, asr_tags: List[VideoTag]) -> str:
     if len(asr_tags) == 0:
-        return asr_tags
+        return ""
     max_gap = config["postprocessing"]["sentence_gap"]
     full_transcript = [asr_tags[0].text]
     last_start = asr_tags[0].start_time
