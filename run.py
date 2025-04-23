@@ -9,6 +9,7 @@ from common_ml.tags import VideoTag
 from dataclasses import asdict, dataclass
 from common_ml.types import Data
 from common_ml.utils import nested_update
+import setproctitle
 
 from asr.model import EnglishSTT
 from config import config
@@ -76,6 +77,7 @@ def prettify_tags(stt: EnglishSTT, asr_tags: List[VideoTag]) -> str:
     return corrected_transcript
 
 if __name__ == '__main__':
+    setproctitle.setproctitle("model-asr")
     parser = argparse.ArgumentParser()
     parser.add_argument('audio_paths', nargs='+', type=str)
     parser.add_argument('--config', type=str, required=False)
