@@ -25,7 +25,7 @@ setup(
         'spacy==3.7.2',
         'loguru',
         'setproctitle',
-        'common_ml @ git+ssh://git@github.com/qluvio/common-ml.git#egg=common_ml',
-        'quick_test_py @ git+https://github.com/elv-nickB/quick_test_py.git#egg=quick_test_py'
+        'common_ml @ git+ssh://git@github.com/eluv-io/common-ml.git#egg=common_ml',
+        'quick_test_py @ git+https://github.com/eluv-io/quick_test_py.git#egg=quick_test_py'
     ]
 )
