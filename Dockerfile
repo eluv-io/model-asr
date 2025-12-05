@@ -32,7 +32,6 @@ RUN /opt/conda/envs/mlpod/bin/pip install .
 
 COPY dependencies ./dependencies
 RUN /opt/conda/envs/mlpod/bin/pip install dependencies/ctcdecode/.
-RUN /opt/conda/envs/mlpod/bin/python -m spacy download en_core_web_sm
 
 COPY config.yml run.py config.py .
 COPY asr ./asr

@@ -6,8 +6,21 @@ from word2number import w2n
 import datetime
 from typing import Tuple
 from loguru import logger as LOG
+from copy import deepcopy
 
 SAMPLE_RATE = 16000
+
+def nested_update(original: dict, updates: dict) -> dict:
+    original = deepcopy(original)
+    def helper(original, updates):
+        for key, value in updates.items():
+            if isinstance(value, dict) and key in original and isinstance(original[key], dict):
+                helper(original[key], value)
+            else:
+                original[key] = value
+    helper(original, updates)
+    return original
+
 
 class CaptionLine():
     def __init__(self, start: float, end: float, text: str):

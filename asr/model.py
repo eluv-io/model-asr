@@ -3,7 +3,6 @@ import torch
 import librosa  
 from typing import List, Tuple
 from loguru import logger
-import spacy
 import io
 import ffmpeg
 
@@ -11,15 +10,14 @@ import nemo.collections.asr as nemo_asr
 from ctcdecode import CTCBeamDecoder
 from deepmultilingualpunctuation import PunctuationModel
 
-from common_ml.tags import VideoTag
-from common_ml.model import VideoModel
 from .utils import postprocess
+from asr.tags import VideoTag
 
 TOKEN_OFFSET = 100
 FRAME_SIZE = .04
 SAMPLE_RATE = 16000
 
-class EnglishSTT(VideoModel):
+class EnglishSTT():
     def __init__(self, asr_path: str, lm_path: str):
         self.device = 'cuda'
         load_path = asr_path
@@ -31,7 +29,6 @@ class EnglishSTT(VideoModel):
         vocab = self.model.decoder.vocabulary + ["_"]
         lm = lm_path
         self.punctuation_model = PunctuationModel()
-        self.capitalization_model = spacy.load("en_core_web_sm")
 
         self.decoder = CTCBeamDecoder(
             [chr(idx + TOKEN_OFFSET) for idx in range(len(vocab))],
@@ -139,22 +136,8 @@ class EnglishSTT(VideoModel):
         return ''.join(capitalized)
     
     def capitalize_proper_nouns(self, sentence: str) -> str:
-        model = self.capitalization_model  
-        proper_acronyms = ["us", "uk", "usa", "dc", "nyc", "la", "sf", "nba", "nfl", "mlb", "ncaa", "nasa", "fbi", "cia", "nypd", "lapd"]
-        doc = model(sentence)
-        capitalized_sentence = ""
-        for token in doc:
-            if token.pos_ == "PROPN" and token.text in proper_acronyms:
-                capitalized_sentence += token.text.upper()
-            elif token.pos_ == "PROPN":
-                capitalized_sentence += token.text.capitalize()
-            elif token.text == "i" or token.text.startswith("i'"):
-                capitalized_sentence += token.text.capitalize()
-            else:
-                capitalized_sentence += token.text
-            capitalized_sentence += token.whitespace_
-
-        return capitalized_sentence
+        # TODO: add back spacy
+        return sentence
 
     def _get_word_level_timestamps(self, timestamps: list, tokens: list) -> list:
         logger.debug(f"get_word_level_timestamps")
