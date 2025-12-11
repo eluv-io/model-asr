@@ -96,7 +96,7 @@ class EnglishSTT():
                 start_time=ts,
                 end_time=ts,
                 text=word,
-                source=""  # To be filled by caller
+                source_media=""  # To be filled by caller
             ))
         
         return tags

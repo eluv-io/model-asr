@@ -26,6 +26,7 @@ ENV SSH_AUTH_SOCK ${SSH_AUTH_SOCK}
 COPY models ./models
 
 COPY setup.py .
+# pointless - but I don't wanna have to rebuild the next step
 RUN mkdir -p asr
 
 RUN /opt/conda/envs/mlpod/bin/pip install .
@@ -34,6 +35,7 @@ COPY dependencies ./dependencies
 RUN /opt/conda/envs/mlpod/bin/pip install dependencies/ctcdecode/.
 
 COPY config.yml run.py config.py .
-COPY asr ./asr
+RUN mkdir -p src
+COPY src ./src
 
 ENTRYPOINT ["/opt/conda/envs/mlpod/bin/python", "-u", "run.py"]

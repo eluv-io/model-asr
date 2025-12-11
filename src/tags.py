@@ -5,4 +5,4 @@ class VideoTag:
     start_time: int
     end_time: int
     text: str
-    source: str
+    source_media: str

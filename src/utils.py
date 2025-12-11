@@ -18,13 +18,13 @@ def combine_tags(tags: List[VideoTag]) -> VideoTag:
     if len(tags) == 0:
         raise ValueError("Cannot combine empty list of tags")
     
-    source = tags[0].source
+    source_media = tags[0].source_media
     
     return VideoTag(
         start_time=tags[0].start_time,
         end_time=tags[-1].end_time,
         text=" ".join(tag.text for tag in tags),
-        source=source
+        source_media=source_media
     )
 
 

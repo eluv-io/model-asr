@@ -51,7 +51,7 @@ class Prettifier:
                     start_time=tag.start_time,
                     end_time=tag.end_time,
                     text=corrected_words[i],
-                    source=tag.source,
+                    source_media=tag.source_media,
                 ))
         
         return output_tags

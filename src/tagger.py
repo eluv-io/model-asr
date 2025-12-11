@@ -137,9 +137,9 @@ class SpeechTagger:
         # Merge into sentence-level tags
         sentence_tags = self._merge_to_sentences(prettified_tags)
         
-        # Set source to first filename
+        # Set source_media to first filename
         for tag in sentence_tags:
-            tag.source = first_fname
+            tag.source_media = first_fname
         
         # Write output
         self._write_tags(first_fname, sentence_tags, suffix="_trail.json")
@@ -175,7 +175,7 @@ class SpeechTagger:
                     start_time=current_start,
                     end_time=tag.end_time,
                     text=' '.join(current_words),
-                    source=""  # Will be set by caller
+                    source_media=""  # Will be set by caller
                 )
                 sentences.append(sentence_tag)
                 
@@ -190,7 +190,7 @@ class SpeechTagger:
                 start_time=current_start,
                 end_time=tags[-1].end_time,
                 text=' '.join(current_words),
-                source=""
+                source_media=""
             )
             sentences.append(sentence_tag)
         
