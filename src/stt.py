@@ -18,7 +18,7 @@ class EnglishSTT():
     def __init__(self, asr_path: str, lm_path: str):
         self.device = 'cuda'
         load_path = asr_path
-        self.model = nemo_src.models.EncDecCTCModelBPE.restore_from(
+        self.model = nemo_asr.models.EncDecCTCModelBPE.restore_from(
             load_path, map_location=self.device).eval()
         logger.info(f"Loaded model from {load_path}")
         self.ids_to_text_func = self.model.tokenizer.ids_to_text

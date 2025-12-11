@@ -1,2 +1,5 @@
 models/*
 test_output/*
+asr.egg-info
+__pycache__
+dependencies/*

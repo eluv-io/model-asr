@@ -1,8 +1,29 @@
 
 from num2words import num2words
 from word2number import w2n
-from typing import Tuple
+from typing import Tuple, List
 from copy import deepcopy
+from src.tags import VideoTag
+
+def combine_tags(tags: List[VideoTag]) -> VideoTag:
+    """
+    Combine word-level VideoTags into a single VideoTag
+    
+    Args:
+        tags: List of word-level VideoTags
+        
+    Returns:
+        Single VideoTag with combined text and time range
+    """
+    if len(tags) == 0:
+        raise ValueError("Cannot combine empty list of tags")
+    
+    return VideoTag(
+        start_time=tags[0].start_time,
+        end_time=tags[-1].end_time,
+        text=" ".join(tag.text for tag in tags)
+    )
+
 
 def nested_update(original: dict, updates: dict) -> dict:
     original = deepcopy(original)

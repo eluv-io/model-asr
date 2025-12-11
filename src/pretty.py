@@ -5,10 +5,11 @@ from src.tags import VideoTag
 class Prettifier:
     """Handles text correction, punctuation, and capitalization"""
     
-    def __init__(self):
+    def __init__(self, max_gap: int):
         self.punctuation_model = PunctuationModel()
+        self.max_gap = max_gap
     
-    def prettify(self, tags: List[VideoTag], max_gap: int) -> List[VideoTag]:
+    def prettify(self, tags: List[VideoTag]) -> List[VideoTag]:
         """
         Apply punctuation and capitalization to word-level tags
         
@@ -28,7 +29,7 @@ class Prettifier:
         last_start = tags[0].start_time
         
         for tag in tags[1:]:
-            if tag.start_time - last_start > max_gap:
+            if tag.start_time - last_start > self.max_gap:
                 sentences.append(' '.join(current_sentence))
                 current_sentence = [tag.text]
             else:

@@ -4,22 +4,15 @@ from typing import List, Callable
 import os
 import sys
 import json
-from dataclasses import asdict, dataclass
 from dacite import from_dict
 import setproctitle
 import time
 from queue import Queue
 import threading
 
-from src.stt import EnglishSTT
+from src.tagger import SpeechTagger, RuntimeConfig
 from src.utils import nested_update
-from src.tags import VideoTag
 from config import config
-
-@dataclass
-class RuntimeConfig:
-    word_level: bool
-    prettify: bool
 
 def run_live_mode(
     tag_fn: Callable[[List[str]], None], 
@@ -91,68 +84,22 @@ def run_live_mode(
         except KeyboardInterrupt:
             break
 
-def prettify_tags(stt: EnglishSTT, asr_tags: List[VideoTag]) -> str:
-    if len(asr_tags) == 0:
-        return ""
-    max_gap = config["postprocessing"]["sentence_gap"]
-    full_transcript = [asr_tags[0].text]
-    last_start = asr_tags[0].start_time
-    for tag in asr_tags[1:]:
-        if tag.start_time - last_start > max_gap:
-            full_transcript.append(tag.text)
-        else:
-            full_transcript[-1] += ' ' + tag.text
-        last_start = tag.start_time
-    corrected_transcript = [stt.correct_text(t) for t in full_transcript]
-    corrected_transcript = ' '.join(corrected_transcript)
-    return corrected_transcript
-
-def make_tag_fn(cfg : RuntimeConfig) -> Callable:
-
-    model = EnglishSTT(config["asr_model"], config["lm_model"])
-
+def make_tag_fn(cfg: RuntimeConfig, tags_out: str) -> Callable:
+    """
+    Create a function that processes audio files using SpeechTagger
+    
+    Args:
+        cfg: Runtime configuration
+        
+    Returns:
+        Function that takes list of audio file paths
+    """
+    tagger = SpeechTagger(cfg, tags_out)
+    
     def tag_fn(audio_paths: List[str]) -> None:
-
-        word_tags = []
-        word_tags_by_file = []
         for fname in audio_paths:
-            with open(fname, 'rb') as fin:
-                audio = fin.read()
-            tags = model.tag(audio)
-            word_tags.extend(tags)
-            word_tags_by_file.append(tags)
-
-        if cfg.prettify:
-            transcript = prettify_tags(model, word_tags)
-        else:
-            transcript = " ".join(t.text for t in word_tags)
-
-        transcript = transcript.split(' ')
-
-        idx = 0
-        for fname, tags in zip(audio_paths, word_tags_by_file):
-            if len(tags) == 0:
-                continue
-
-            out_tags = []
-
-            if cfg.word_level:
-                for tag in tags:
-                    tag.text = transcript[idx]
-                    out_tags.append(tag)
-                    idx += 1
-            else:
-                new_tag = VideoTag(
-                    start_time=tags[0].start_time, 
-                    end_time=tags[-1].end_time,
-                    text = " ".join(transcript[idx:idx+len(tags)])
-                )
-                idx += len(tags)
-                out_tags.append(new_tag)
-
-            with open(os.path.join(tags_out, f"{os.path.basename(fname)}_tags.json"), 'w') as fout:
-                fout.write(json.dumps([asdict(tag) for tag in out_tags]))
-
+            tagger.tag(fname)
+    
     return tag_fn
 
 if __name__ == '__main__':
@@ -175,7 +122,7 @@ if __name__ == '__main__':
     if not os.path.exists(tags_out):
         os.makedirs(tags_out)
     
-    tag_fn = make_tag_fn(runtime_config)
+    tag_fn = make_tag_fn(runtime_config, tags_out)
 
     if args.live:
         print('Running in live mode', file=sys.stderr)
