@@ -11,9 +11,9 @@ import time
 from queue import Queue
 import threading
 
-from asr.model import EnglishSTT
-from asr.utils import nested_update
-from asr.tags import VideoTag
+from src.stt import EnglishSTT
+from src.utils import nested_update
+from src.tags import VideoTag
 from config import config
 
 @dataclass
@@ -90,27 +90,6 @@ def run_live_mode(
                 
         except KeyboardInterrupt:
             break
-
-def run(model: EnglishSTT, audio_paths: List[str]) -> None:
-    word_tags = []
-    word_tags_by_file = []
-    for fname in audio_paths:
-        with open(fname, 'rb') as fin:
-            audio = fin.read()
-        tags = model.tag(audio)
-        word_tags.extend(tags)
-        word_tags_by_file.append(tags)
-
-    transcript = prettify_tags(model, word_tags)
-    transcript = transcript.split(' ')
-
-    idx = 0
-    for fname, tags in zip(audio_paths, word_tags_by_file):
-        for tag in tags:
-            tag.text = transcript[idx]
-            idx += 1
-        with open(os.path.join(f"{os.path.basename(fname)}_tags.json"), 'w') as fout:
-            fout.write(json.dumps([asdict(tag) for tag in tags]))
 
 def prettify_tags(stt: EnglishSTT, asr_tags: List[VideoTag]) -> str:
     if len(asr_tags) == 0:

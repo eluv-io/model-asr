@@ -36,4 +36,4 @@ RUN /opt/conda/envs/mlpod/bin/pip install dependencies/ctcdecode/.
 COPY config.yml run.py config.py .
 COPY asr ./asr
 
-ENTRYPOINT ["/opt/conda/envs/mlpod/bin/python", "run.py"]
+ENTRYPOINT ["/opt/conda/envs/mlpod/bin/python", "-u", "run.py"]
