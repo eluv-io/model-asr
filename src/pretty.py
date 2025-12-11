@@ -50,7 +50,8 @@ class Prettifier:
                 output_tags.append(VideoTag(
                     start_time=tag.start_time,
                     end_time=tag.end_time,
-                    text=corrected_words[i]
+                    text=corrected_words[i],
+                    source=tag.source,
                 ))
         
         return output_tags
