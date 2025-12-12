@@ -94,7 +94,7 @@ class EnglishSTT():
             ts = round(ts)
             tags.append(ModelTag(
                 start_time=ts,
-                end_time=ts+FRAME_SIZE*1000,
+                end_time=int(ts+FRAME_SIZE*1000),
                 text=word,
             ))
         
