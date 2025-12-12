@@ -94,8 +94,10 @@ class EnglishSTT():
             ts = round(ts)
             tags.append(ModelTag(
                 start_time=ts,
-                end_time=ts,
+                end_time=ts+FRAME_SIZE*1000,
                 text=word,
             ))
         
+        # return sorted by start_time
+        tags.sort(key=lambda t: t.start_time)
         return tags
