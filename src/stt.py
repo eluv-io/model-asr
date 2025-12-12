@@ -7,7 +7,7 @@ import nemo.collections.asr as nemo_asr
 from ctcdecode import CTCBeamDecoder
 
 from .utils import postprocess
-from src.tags import VideoTag
+from src.tags import ModelTag
 
 TOKEN_OFFSET = 100
 FRAME_SIZE = .04
@@ -72,7 +72,7 @@ class EnglishSTT():
                 word_timestamps.append(ts)
         return word_timestamps
 
-    def tag(self, audio_tensor: torch.Tensor) -> List[VideoTag]:
+    def tag(self, audio_tensor: torch.Tensor) -> List[ModelTag]:
         """
         Core STT: tensor -> word-level tags (no prettification)
         
@@ -80,7 +80,7 @@ class EnglishSTT():
             audio_tensor: torch.Tensor of shape (1, num_samples)
         
         Returns:
-            List of VideoTag with word-level timestamps
+            List of ModelTag with word-level timestamps
         """
         probs = self._compute_probs(audio_tensor)
         prediction, _, timesteps, tokens = self._beamsearch(probs)
@@ -92,11 +92,10 @@ class EnglishSTT():
         tags = []
         for word, ts in zip(prediction.split(), word_level_timestamps):
             ts = round(ts)
-            tags.append(VideoTag(
+            tags.append(ModelTag(
                 start_time=ts,
                 end_time=ts,
                 text=word,
-                source_media=""  # To be filled by caller
             ))
         
         return tags

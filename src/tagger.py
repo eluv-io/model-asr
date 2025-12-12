@@ -3,17 +3,18 @@ from dataclasses import dataclass
 import os
 import json
 from dataclasses import asdict
+import typing
 import torch
 
 from src.stt import EnglishSTT
 from src.pretty import Prettifier
-from src.tags import VideoTag
+from src.tags import ModelTag, AugmentedTag
 from src.audio import audio_file_to_tensor
 from src.utils import combine_tags
 from config import config
 
 
-@dataclass
+@dataclass(frozen=True)
 class RuntimeConfig:
     word_level: bool
     prettify: bool
@@ -91,7 +92,7 @@ class SpeechTagger:
         if self.cfg.pretty_trail:
             self._process_trailing_buffer(audio_tensor, fname, duration)
     
-    def _format_tags(self, tags: List[VideoTag]) -> List[VideoTag]:
+    def _format_tags(self, tags: List[ModelTag]) -> List[ModelTag]:
         """Apply prettification and word/phrase level formatting"""
         # Apply prettification if enabled
         if self.cfg.prettify:
@@ -137,17 +138,28 @@ class SpeechTagger:
         # Merge into sentence-level tags
         sentence_tags = self._merge_to_sentences(prettified_tags)
         
-        # Set source_media to first filename
-        for tag in sentence_tags:
-            tag.source_media = os.path.basename(first_fname)
+        augmented_tags = self._add_augmented_fields(sentence_tags, first_fname)
         
         # Write output
-        self._write_tags(first_fname, sentence_tags, suffix="-prettified_tags.json")
+        self._write_tags(first_fname, augmented_tags, suffix="-prettified_tags.json")
         
         # Clear buffer
         self.buffer.clear()
+
+    def _add_augmented_fields(self, tags: List[ModelTag], fname: str) -> List[AugmentedTag]:
+        """Add augmented fields to tags"""
+        return [
+            AugmentedTag(
+                start_time=tag.start_time,
+                end_time=tag.end_time,
+                text=tag.text,
+                source_media=fname,
+                track="auto_captions"
+            )
+            for tag in tags
+        ]
     
-    def _merge_to_sentences(self, tags: List[VideoTag]) -> List[VideoTag]:
+    def _merge_to_sentences(self, tags: List[ModelTag]) -> List[ModelTag]:
         """
         Merge word-level tags into sentence-level tags based on punctuation
         
@@ -155,7 +167,7 @@ class SpeechTagger:
             tags: List of word-level tags (with punctuation from prettifier)
         
         Returns:
-            List of sentence-level VideoTags
+            List of sentence-level ModelTags
         """
         if len(tags) == 0:
             return []
@@ -171,11 +183,10 @@ class SpeechTagger:
             # Check if this word ends with sentence delimiter
             if any(tag.text.endswith(delim) for delim in sentence_delimiters):
                 # Create sentence tag
-                sentence_tag = VideoTag(
+                sentence_tag = ModelTag(
                     start_time=current_start,
                     end_time=tag.end_time,
                     text=' '.join(current_words),
-                    source_media=""  # Will be set by caller
                 )
                 sentences.append(sentence_tag)
                 
@@ -186,11 +197,10 @@ class SpeechTagger:
         
         # Handle remaining words (if no sentence delimiter at end)
         if current_words:
-            sentence_tag = VideoTag(
+            sentence_tag = ModelTag(
                 start_time=current_start,
                 end_time=tags[-1].end_time,
-                text=' '.join(current_words),
-                source_media=""
+                text=' '.join(current_words)
             )
             sentences.append(sentence_tag)
         
@@ -201,7 +211,7 @@ class SpeechTagger:
         if self.cfg.pretty_trail and self.buffer and not self.buffer.is_empty():
             self._emit_prettified_trail()
     
-    def _write_tags(self, fname: str, tags: List[VideoTag], suffix: str) -> None:
+    def _write_tags(self, fname: str, tags: typing.Union[List[ModelTag], List[AugmentedTag]], suffix: str) -> None:
         """Write tags to JSON file"""
         output_path = os.path.join(
             self.tags_out, 

@@ -1,6 +1,6 @@
 from typing import List
 from deepmultilingualpunctuation import PunctuationModel
-from src.tags import VideoTag
+from src.tags import ModelTag
 
 class Prettifier:
     """Handles text correction, punctuation, and capitalization"""
@@ -9,16 +9,16 @@ class Prettifier:
         self.punctuation_model = PunctuationModel()
         self.max_gap = max_gap
     
-    def prettify(self, tags: List[VideoTag]) -> List[VideoTag]:
+    def prettify(self, tags: List[ModelTag]) -> List[ModelTag]:
         """
         Apply punctuation and capitalization to word-level tags
         
         Args:
-            tags: List of word-level VideoTags
+            tags: List of word-level ModelTags
             max_gap: Maximum gap in ms to consider words part of same sentence
         
         Returns:
-            List of VideoTags with corrected text
+            List of ModelTags with corrected text
         """
         if len(tags) == 0:
             return []
@@ -44,14 +44,13 @@ class Prettifier:
         corrected_words = corrected_text.split()
         
         # Update tags with corrected words
-        output_tags: List[VideoTag] = []
+        output_tags: List[ModelTag] = []
         for i, tag in enumerate(tags):
             if i < len(corrected_words):
-                output_tags.append(VideoTag(
+                output_tags.append(ModelTag(
                     start_time=tag.start_time,
                     end_time=tag.end_time,
                     text=corrected_words[i],
-                    source_media=tag.source_media,
                 ))
         
         return output_tags

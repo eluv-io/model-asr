@@ -3,24 +3,24 @@ from num2words import num2words
 from word2number import w2n
 from typing import Tuple, List
 from copy import deepcopy
-from src.tags import VideoTag
+from src.tags import ModelTag
 
-def combine_tags(tags: List[VideoTag]) -> VideoTag:
+def combine_tags(tags: List[ModelTag]) -> ModelTag:
     """
-    Combine word-level VideoTags into a single VideoTag
+    Combine word-level ModelTags into a single ModelTag
     
     Args:
-        tags: List of word-level VideoTags
+        tags: List of word-level ModelTags
         
     Returns:
-        Single VideoTag with combined text and time range
+        Single ModelTag with combined text and time range
     """
     if len(tags) == 0:
         raise ValueError("Cannot combine empty list of tags")
     
     source_media = tags[0].source_media
     
-    return VideoTag(
+    return ModelTag(
         start_time=tags[0].start_time,
         end_time=tags[-1].end_time,
         text=" ".join(tag.text for tag in tags),
