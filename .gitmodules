@@ -1,3 +1,6 @@
 [submodule "dependencies/ctcdecode"]
 	path = dependencies/ctcdecode
 	url = git@github.com:parlance/ctcdecode.git
+[submodule "common-ml"]
+	path = common-ml
+	url = git@github.com:eluv-io/common-ml

@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3:latest
+FROM continuumio/miniconda3:25.1.1-2
 WORKDIR /elv
 
 RUN conda create -n mlpod python=3.7.16 -y
