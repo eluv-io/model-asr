@@ -139,10 +139,10 @@ class SpeechTagger:
         
         # Set source_media to first filename
         for tag in sentence_tags:
-            tag.source_media = first_fname
+            tag.source_media = os.path.basename(first_fname)
         
         # Write output
-        self._write_tags(first_fname, sentence_tags, suffix="_trail.json")
+        self._write_tags(first_fname, sentence_tags, suffix="-prettified_tags.json")
         
         # Clear buffer
         self.buffer.clear()
