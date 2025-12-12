@@ -153,7 +153,7 @@ class SpeechTagger:
                 start_time=tag.start_time,
                 end_time=tag.end_time,
                 text=tag.text,
-                source_media=fname,
+                source_media=os.path.basename(fname),
                 track="auto_captions"
             )
             for tag in tags
