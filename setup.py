@@ -1,10 +1,9 @@
 from setuptools import setup
-import os
 
 setup(
-    name="asr",
+    name="src",
     version="0.1",
-    packages=['asr'],
+    packages=['src'],
     install_requires=[
         'torch==1.9.0',
         'nemo_toolkit[all]==1.11.0',
