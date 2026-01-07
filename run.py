@@ -98,7 +98,10 @@ def make_tag_fn(cfg: RuntimeConfig, tags_out: str) -> Callable:
     
     def tag_fn(audio_paths: List[str]) -> None:
         for fname in audio_paths:
-            tagger.tag(fname)
+            try:
+                tagger.tag(fname)
+            except Exception as e:
+                print(f"Error processing {fname}: {e}", file=sys.stderr)
     
     return tag_fn
 
