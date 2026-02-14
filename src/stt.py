@@ -91,6 +91,8 @@ class EnglishSTT():
         
         tags = []
         for word, ts in zip(prediction.split(), word_level_timestamps):
+            if word.lower() == "d":
+                continue
             ts = round(ts)
             tags.append(ModelTag(
                 start_time=ts,
