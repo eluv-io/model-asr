@@ -1,10 +1,9 @@
 from setuptools import setup
-import os
 
 setup(
-    name="asr",
+    name="src",
     version="0.1",
-    packages=['asr'],
+    packages=['src'],
     install_requires=[
         'torch==1.9.0',
         'nemo_toolkit[all]==1.11.0',
@@ -22,10 +21,9 @@ setup(
         'num2words==0.5.10',
         'word2number',
         'deepmultilingualpunctuation==1.0.1',
-        'spacy==3.7.2',
         'loguru',
         'setproctitle',
-        'common_ml @ git+ssh://git@github.com/eluv-io/common-ml.git#egg=common_ml',
-        'quick_test_py @ git+https://github.com/eluv-io/quick-test-py.git#egg=quick_test_py'
+        'ffmpeg-python==0.2.0',
+        'dacite',
     ]
 )

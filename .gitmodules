@@ -1,3 +1,6 @@
 [submodule "dependencies/ctcdecode"]
 	path = dependencies/ctcdecode
 	url = git@github.com:parlance/ctcdecode.git
+[submodule "buildscripts"]
+	path = buildscripts
+	url = https://github.com/qluvio/buildscripts.git

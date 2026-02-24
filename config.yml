@@ -8,4 +8,7 @@ storage:
   model_path: /ml/models/stt
 runtime:
   default:
-    word_level: False
+    word_level: True
+    prettify: True
+    pretty_trail: True
+    pretty_trail_buffer: 30
