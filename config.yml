@@ -10,5 +10,5 @@ runtime:
   default:
     word_level: True
     prettify: True
-    pretty_trail: False
+    pretty_trail: True
     pretty_trail_buffer: 30
