@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from dataclasses import dataclass
 import os
 import json
@@ -27,27 +27,20 @@ class AudioBuffer:
     
     def __init__(self):
         self.tensors: List[torch.Tensor] = []
-        self.filenames: List[str] = []
         self.total_duration: float = 0.0
     
-    def add(self, tensor: torch.Tensor, filename: str, duration: float):
+    def add(self, tensor: torch.Tensor, duration: float):
         """Add audio to buffer"""
         self.tensors.append(tensor)
-        self.filenames.append(filename)
         self.total_duration += duration
     
     def get_combined_tensor(self) -> torch.Tensor:
         """Concatenate all tensors"""
         return torch.cat(self.tensors, dim=1)
     
-    def get_first_filename(self) -> str:
-        """Get filename of first buffered audio"""
-        return self.filenames[0] if self.filenames else ""
-    
     def clear(self):
         """Clear the buffer"""
         self.tensors = []
-        self.filenames = []
         self.total_duration = 0.0
     
     def is_ready(self, threshold: float) -> bool:
@@ -69,6 +62,7 @@ class SpeechTagger:
         
         # Initialize buffer for pretty_trail feature
         self.buffer = AudioBuffer() if cfg.pretty_trail else None
+        self.pending_files = []
     
     def tag(self, fname: str) -> None:
         """
@@ -86,11 +80,25 @@ class SpeechTagger:
         # Write primary output only if we have tags
         if len(tags) > 0:
             output_tags = self._format_tags(tags)
-            self._write_tags(fname, output_tags, suffix="_tags.json")
+            output_tags = self._add_augmented_fields(output_tags, fname, None)
+            self._write_tags(output_tags)
         
         # Always add to trailing buffer if enabled (even if tags is empty)
         if self.cfg.pretty_trail:
             self._process_trailing_buffer(audio_tensor, fname, duration)
+
+    def _add_augmented_fields(self, tags: List[ModelTag], fname: str, track: Optional[str]) -> List[AugmentedTag]:
+        """Add source_media and track fields to tags"""
+        augmented_tags = []
+        for tag in tags:
+            augmented_tags.append(AugmentedTag(
+                start_time=tag.start_time,
+                end_time=tag.end_time,
+                tag=tag.tag,
+                source_media=fname,
+                track=track
+            ))
+        return augmented_tags
     
     def _format_tags(self, tags: List[ModelTag]) -> List[ModelTag]:
         """Apply prettification and word/phrase level formatting"""
@@ -109,7 +117,8 @@ class SpeechTagger:
         """Handle accumulation and processing of trailing buffer"""
         # Add to buffer
         assert self.buffer is not None
-        self.buffer.add(audio_tensor, fname, duration)
+        self.buffer.add(audio_tensor, duration)
+        self.pending_files.append(fname)
         
         # Check if buffer is ready to process
         if self.buffer.is_ready(self.cfg.pretty_trail_buffer):
@@ -118,18 +127,19 @@ class SpeechTagger:
     def _emit_prettified_trail(self):
         """Process accumulated buffer and emit prettified sentence-level tags"""
         assert self.buffer is not None
-        if self.buffer.is_empty():
+        if self.buffer.is_empty() or len(self.pending_files) == 0:
             return
         
         # Get combined audio
         combined_tensor = self.buffer.get_combined_tensor()
-        first_fname = self.buffer.get_first_filename()
+        first_fname = self.pending_files[0]
         
         # Run STT on combined audio
         tags = self.model.tag(combined_tensor)
         
         if len(tags) == 0:
             self.buffer.clear()
+            self.pending_files = []
             return
         
         # Prettify word-level tags
@@ -138,26 +148,22 @@ class SpeechTagger:
         # Merge into sentence-level tags
         sentence_tags = self._merge_to_sentences(prettified_tags)
         
-        augmented_tags = self._add_augmented_fields(sentence_tags, first_fname)
+        augmented_tags = self._add_augmented_fields(sentence_tags, first_fname, "auto_captions")
         
         # Write output
-        self._write_tags(first_fname, augmented_tags, suffix="-prettified_tags.json")
+        self._write_tags(augmented_tags)
+
+        self._mark_files_finished(self.pending_files)
+        self.pending_files = []
         
         # Clear buffer
         self.buffer.clear()
+    
+    def _mark_files_finished(self, files: List[str]):
+        with open(self.tags_out, 'a') as fout:
+            for fname in files:
+                fout.write(json.dumps({"type":"progress", "data":{"source_media": os.path.basename(fname)}}) + '\n')
 
-    def _add_augmented_fields(self, tags: List[ModelTag], fname: str) -> List[AugmentedTag]:
-        """Add augmented fields to tags"""
-        return [
-            AugmentedTag(
-                start_time=tag.start_time,
-                end_time=tag.end_time,
-                text=tag.text,
-                source_media=os.path.basename(fname),
-                track="auto_captions"
-            )
-            for tag in tags
-        ]
     
     def _merge_to_sentences(self, tags: List[ModelTag]) -> List[ModelTag]:
         """
@@ -178,15 +184,15 @@ class SpeechTagger:
         current_start = tags[0].start_time
         
         for i, tag in enumerate(tags):
-            current_words.append(tag.text)
+            current_words.append(tag.tag)
             
             # Check if this word ends with sentence delimiter
-            if any(tag.text.endswith(delim) for delim in sentence_delimiters):
+            if any(tag.tag.endswith(delim) for delim in sentence_delimiters):
                 # Create sentence tag
                 sentence_tag = ModelTag(
                     start_time=current_start,
                     end_time=tag.end_time,
-                    text=' '.join(current_words),
+                    tag=' '.join(current_words),
                 )
                 sentences.append(sentence_tag)
                 
@@ -200,7 +206,7 @@ class SpeechTagger:
             sentence_tag = ModelTag(
                 start_time=current_start,
                 end_time=tags[-1].end_time,
-                text=' '.join(current_words)
+                tag=' '.join(current_words)
             )
             sentences.append(sentence_tag)
         
@@ -211,11 +217,11 @@ class SpeechTagger:
         if self.cfg.pretty_trail and self.buffer and not self.buffer.is_empty():
             self._emit_prettified_trail()
     
-    def _write_tags(self, fname: str, tags: typing.Union[List[ModelTag], List[AugmentedTag]], suffix: str) -> None:
+    def _write_tags(self, tags: List[AugmentedTag]) -> None:
         """Write tags to JSON file"""
-        output_path = os.path.join(
-            self.tags_out, 
-            f"{os.path.basename(fname)}{suffix}"
-        )
-        with open(output_path, 'w') as fout:
-            fout.write(json.dumps([asdict(tag) for tag in tags]))
+        with open(self.tags_out, 'a') as fout:
+            for tag in tags:
+                data = asdict(tag)
+                # filter null track so tagger uses default
+                data = {k: v for k, v in data.items() if v is not None}
+                fout.write(json.dumps(asdict(tag)) + '\n')

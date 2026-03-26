@@ -97,7 +97,7 @@ class EnglishSTT():
             tags.append(ModelTag(
                 start_time=ts,
                 end_time=int(ts+FRAME_SIZE*1000),
-                text=word,
+                tag=word,
             ))
         
         # return sorted by start_time
