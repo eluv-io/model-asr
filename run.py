@@ -11,8 +11,6 @@ from queue import Queue
 import threading
 
 from src.tagger import SpeechTagger, RuntimeConfig
-from src.utils import nested_update
-from config import config
 
 def run_live_mode(
     tag_fn: Callable[[List[str]], None], 
@@ -90,7 +88,7 @@ def make_tag_fn(cfg: RuntimeConfig, tags_out: str) -> Callable:
     
     Args:
         cfg: Runtime configuration
-        
+        tags_out: Path to output tags .jsonl file
     Returns:
         Function that takes list of audio file paths
     """
@@ -108,27 +106,13 @@ def make_tag_fn(cfg: RuntimeConfig, tags_out: str) -> Callable:
 if __name__ == '__main__':
     setproctitle.setproctitle("model-asr")
     parser = argparse.ArgumentParser()
-    parser.add_argument('audio_paths', nargs='*', type=str, default=[])
-    parser.add_argument('--config', type=str, required=False)
-    parser.add_argument('--live', action='store_true', help='Run in live mode (read files from stdin)')
+    parser.add_argument('--output-path', type=str, required=True)
+    parser.add_argument('--params', type=str, required=False)
     args = parser.parse_args()
+
+    params = json.loads(args.params) if args.params else {}
+    params = from_dict(data=params, data_class=RuntimeConfig)
     
-    if args.config is None:
-        cfg = config["runtime"]["default"]
-    else:
-        cfg = json.loads(args.config)
-        cfg = nested_update(config["runtime"]["default"], cfg)
+    tag_fn = make_tag_fn(params, args.output_path)
 
-    runtime_config = from_dict(data=cfg, data_class=RuntimeConfig)
-
-    tags_out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tags')
-    if not os.path.exists(tags_out):
-        os.makedirs(tags_out)
-    
-    tag_fn = make_tag_fn(runtime_config, tags_out)
-
-    if args.live:
-        print('Running in live mode', file=sys.stderr)
-        run_live_mode(tag_fn)
-    else:
-        tag_fn(args.audio_paths)
+    run_live_mode(tag_fn)

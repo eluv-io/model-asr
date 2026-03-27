@@ -16,10 +16,10 @@ from config import config
 
 @dataclass(frozen=True)
 class RuntimeConfig:
-    word_level: bool
-    prettify: bool
-    pretty_trail: bool
-    pretty_trail_buffer: int
+    word_level: bool = True
+    prettify: bool = True
+    pretty_trail: bool = True
+    pretty_trail_buffer: int = 30
 
 
 class AudioBuffer:
