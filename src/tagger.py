@@ -162,7 +162,7 @@ class SpeechTagger:
     def _mark_files_finished(self, files: List[str]):
         with open(self.tags_out, 'a') as fout:
             for fname in files:
-                fout.write(json.dumps({"type":"progress", "data":{"source_media": os.path.basename(fname)}}) + '\n')
+                fout.write(json.dumps({"type":"progress", "data":{"source_media": fname}}) + '\n')
 
     
     def _merge_to_sentences(self, tags: List[ModelTag]) -> List[ModelTag]:
@@ -224,4 +224,5 @@ class SpeechTagger:
                 data = asdict(tag)
                 # filter null track so tagger uses default
                 data = {k: v for k, v in data.items() if v is not None}
-                fout.write(json.dumps(asdict(tag)) + '\n')
+                as_message = {"type": "tag", "data": data}
+                fout.write(json.dumps(as_message) + '\n')
