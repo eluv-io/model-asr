@@ -65,6 +65,9 @@ class EnglishSTT():
         return pred_text, score, timesteps, tokens
 
     def _get_word_level_timestamps(self, timestamps: list, tokens: list, frame_size: float) -> list:
+        timestamps = timestamps[:]
+        for i in range(1, len(timestamps)):
+            timestamps[i] = max(timestamps[i], timestamps[i-1])
         logger.debug(f"get_word_level_timestamps")
         word_timestamps = []
         current_start = None
