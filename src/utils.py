@@ -18,13 +18,10 @@ def combine_tags(tags: List[ModelTag]) -> ModelTag:
     if len(tags) == 0:
         raise ValueError("Cannot combine empty list of tags")
     
-    source_media = tags[0].source_media
-    
     return ModelTag(
         start_time=tags[0].start_time,
         end_time=tags[-1].end_time,
-        text=" ".join(tag.text for tag in tags),
-        source_media=source_media
+        tag=" ".join(tag.tag for tag in tags),
     )
 
 

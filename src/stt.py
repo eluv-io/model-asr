@@ -64,12 +64,22 @@ class EnglishSTT():
 
         return pred_text, score, timesteps, tokens
 
-    def _get_word_level_timestamps(self, timestamps: list, tokens: list) -> list:
+    def _get_word_level_timestamps(self, timestamps: list, tokens: list, frame_size: float) -> list:
+        timestamps = timestamps[:]
+        for i in range(1, len(timestamps)):
+            timestamps[i] = max(timestamps[i], timestamps[i-1])
         logger.debug(f"get_word_level_timestamps")
         word_timestamps = []
+        current_start = None
+        current_end = None
         for ts, tok in zip(timestamps, tokens):
             if tok.startswith('▁'):
-                word_timestamps.append(ts)
+                if current_start is not None:
+                    word_timestamps.append((current_start, current_end + frame_size))
+                current_start = ts
+            current_end = ts
+        if current_start is not None:
+            word_timestamps.append((current_start, current_end + frame_size))
         return word_timestamps
 
     def tag(self, audio_tensor: torch.Tensor) -> List[ModelTag]:
@@ -86,18 +96,17 @@ class EnglishSTT():
         prediction, _, timesteps, tokens = self._beamsearch(probs)
         timesteps_in_milliseconds = [t*1000 for t in timesteps]
         word_level_timestamps = self._get_word_level_timestamps(
-            timesteps_in_milliseconds, tokens)
+            timesteps_in_milliseconds, tokens, FRAME_SIZE*1000)
         prediction, word_level_timestamps = postprocess(prediction, word_level_timestamps)
         
         tags = []
-        for word, ts in zip(prediction.split(), word_level_timestamps):
+        for word, (start, end) in zip(prediction.split(), word_level_timestamps):
             if word.lower() == "d":
                 continue
-            ts = round(ts)
             tags.append(ModelTag(
-                start_time=ts,
-                end_time=int(ts+FRAME_SIZE*1000),
-                text=word,
+                start_time=round(start),
+                end_time=round(end),
+                tag=word,
             ))
         
         # return sorted by start_time

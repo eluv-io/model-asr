@@ -25,15 +25,15 @@ class Prettifier:
         
         # Group into sentences based on time gaps
         sentences = []
-        current_sentence = [tags[0].text]
+        current_sentence = [tags[0].tag]
         last_start = tags[0].start_time
         
         for tag in tags[1:]:
             if tag.start_time - last_start > self.max_gap:
                 sentences.append(' '.join(current_sentence))
-                current_sentence = [tag.text]
+                current_sentence = [tag.tag]
             else:
-                current_sentence.append(tag.text)
+                current_sentence.append(tag.tag)
             last_start = tag.start_time
         
         sentences.append(' '.join(current_sentence))
@@ -50,7 +50,7 @@ class Prettifier:
                 output_tags.append(ModelTag(
                     start_time=tag.start_time,
                     end_time=tag.end_time,
-                    text=corrected_words[i],
+                    tag=corrected_words[i],
                 ))
         
         return output_tags
